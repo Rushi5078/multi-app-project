@@ -1,16 +1,19 @@
-from flask import Flask, jsonify
+from flask import Flask, render_template
 import requests
 
 app = Flask(__name__)
 
-@app.route('/')
-def home():
-    return "Welcome to Python Frontend!"
+BACKEND_URL = "http://backend:5000/api/data"
 
-@app.route('/call-backend')
-def call_backend():
-    res = requests.get("http://backend:5000/api")
-    return jsonify({"backend_reply": res.json()})
+@app.route("/")
+def home():
+    try:
+        response = requests.get(BACKEND_URL).json()
+        message = response.get("message", "No response from backend")
+    except:
+        message = "Backend not reachable"
+
+    return render_template("index.html", backend_message=message)
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=8000)
