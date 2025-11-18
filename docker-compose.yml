@@ -1,40 +1,37 @@
-version: "3.8"
+version: '3.8'
 
 services:
-  postgres:
-    image: postgres:15
-    container_name: mypostgres
+  frontend:
+    build: ./frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+
+  backend:
+    build: ./backend
+    ports:
+      - "5000:5000"
+    depends_on:
+      - mypostgres
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: password123
-      POSTGRES_DB: testdb
+      POSTGRES_HOST: mypostgres
+      POSTGRES_USER: myuser
+      POSTGRES_PASSWORD: mypassword
+      POSTGRES_DB: mydb
+
+  mypostgres:
+    image: postgres:15
+    restart: always
+    environment:
+      POSTGRES_USER: myuser
+      POSTGRES_PASSWORD: mypassword
+      POSTGRES_DB: mydb
     ports:
       - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
 
-  backend:
-    build: ./backend
-    container_name: backend
-    ports:
-      - "5000:5000"
-    depends_on:
-      - postgres
-    environment:
-      DB_HOST: postgres
-      DB_USER: postgres
-      DB_PASSWORD: password123
-      DB_NAME: testdb
-    restart: always
-
-  frontend:
-    build: ./frontend
-    container_name: frontend
-    ports:
-      - "3000:80"
-    depends_on:
-      - backend
-    restart: always
-
 volumes:
   pgdata:
+

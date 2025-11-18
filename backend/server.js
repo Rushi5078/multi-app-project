@@ -1,36 +1,36 @@
-const express = require("express");
-const { Client } = require("pg");
-const cors = require("cors");
+const express = require('express');
+const { Client } = require('pg');
 
 const app = express();
-app.use(cors());
 
-// PostgreSQL connection
-const db = new Client({
-    host: "your-db-host",
+// Database configuration using docker-compose environment variables
+const dbConfig = {
+    host: process.env.POSTGRES_HOST || "mypostgres",
+    user: process.env.POSTGRES_USER || "myuser",
+    password: process.env.POSTGRES_PASSWORD || "mypassword",
+    database: process.env.POSTGRES_DB || "mydb",
     port: 5432,
-    user: "postgres",
-    password: "yourpassword",
-    database: "testdb"
-});
+};
 
-db.connect()
-    .then(() => console.log("Connected to PostgreSQL"))
-    .catch((err) => console.error("DB error:", err));
-
-// API
-app.get("/api", async (req, res) => {
+app.get('/api', async (req, res) => {
     try {
-        const result = await db.query("SELECT NOW() as time");
+        const client = new Client(dbConfig);
+        await client.connect();
+
+        const result = await client.query("SELECT NOW()");
+        await client.end();
+
         res.json({
             message: "Hello from Backend + PostgreSQL!",
-            time: result.rows[0].time
+            db_time: result.rows
         });
     } catch (err) {
-        res.json({ error: "DB Error", details: err });
+        console.error("DB error:", err);
+        res.status(500).json({ error: err.message });
     }
 });
 
 app.listen(5000, () => {
     console.log("Backend running on port 5000");
 });
+
