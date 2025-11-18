@@ -1,38 +1,36 @@
 const express = require("express");
 const { Client } = require("pg");
+const cors = require("cors");
 
 const app = express();
-const PORT = 5000;
+app.use(cors());
 
 // PostgreSQL connection
-const client = new Client({
-    host: "db",
+const db = new Client({
+    host: "your-db-host",
+    port: 5432,
     user: "postgres",
-    password: "postgres",
+    password: "yourpassword",
     database: "testdb"
 });
 
-client.connect()
+db.connect()
     .then(() => console.log("Connected to PostgreSQL"))
-    .catch(err => console.error("DB connection error:", err));
+    .catch((err) => console.error("DB error:", err));
 
-app.get("/", (req, res) => {
-    res.send("Backend is running successfully!");
-});
-
-// API → returns data from DB
-app.get("/api/data", async (req, res) => {
+// API
+app.get("/api", async (req, res) => {
     try {
-        const result = await client.query("SELECT NOW() as server_time");
+        const result = await db.query("SELECT NOW() as time");
         res.json({
             message: "Hello from Backend + PostgreSQL!",
-            time: result.rows[0].server_time
+            time: result.rows[0].time
         });
     } catch (err) {
-        res.json({ error: "DB Error", details: err.message });
+        res.json({ error: "DB Error", details: err });
     }
 });
 
-app.listen(PORT, () => {
-    console.log(`Backend running on port ${PORT}`);
+app.listen(5000, () => {
+    console.log("Backend running on port 5000");
 });
